@@ -1,0 +1,89 @@
+/* ============================================================
+   Weather Information Management System - Custom Styles
+   ============================================================ */
+
+/* Sidebar active state */
+.sidebar .nav-link {
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+.sidebar .nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+.sidebar .nav-link.active {
+    background-color: var(--bs-primary, #0d6efd);
+}
+
+/* Card hover effect */
+.card-stat {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Chart containers */
+.chart-container {
+    width: 100%;
+    height: 400px;
+}
+
+/* Table sticky header */
+.table-sticky thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+/* Modal backdrop fix for Bootstrap */
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+/* Import upload area */
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    transition: border-color 0.3s;
+    cursor: pointer;
+}
+.upload-area:hover, .upload-area.dragover {
+    border-color: var(--bs-primary, #0d6efd);
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Responsive sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100% !important;
+        position: relative !important;
+        top: 0 !important;
+        height: auto !important;
+    }
+    main {
+        margin-left: 0 !important;
+    }
+}
+
+/* Status badges */
+.badge-source-manual { background-color: #6c757d; }
+.badge-source-api_openweather { background-color: #0d6efd; }
+.badge-source-import { background-color: #198754; }
+
+/* Filter bar */
+.filter-bar {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+/* Pagination info */
+.pagination-info {
+    color: #6c757d;
+    font-size: 0.9rem;
+}

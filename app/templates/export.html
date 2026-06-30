@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}数据导出 - 气象信息管理系统{% endblock %}
+{% block page_title %}数据导出{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-funnel me-2"></i>导出筛选条件
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">城市</label>
+                        <select id="export-city" class="form-select">
+                            <option value="">全部城市</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">数据来源</label>
+                        <select id="export-source" class="form-select">
+                            <option value="">全部</option>
+                            <option value="manual">手动录入</option>
+                            <option value="api_openweather">API获取</option>
+                            <option value="import">批量导入</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">开始日期</label>
+                        <input type="date" id="export-date-from" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">结束日期</label>
+                        <input type="date" id="export-date-to" class="form-control">
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="d-flex gap-3">
+                    <button class="btn btn-success" onclick="doExport('excel')">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i>导出 Excel (.xlsx)
+                    </button>
+                    <button class="btn btn-primary" onclick="doExport('csv')">
+                        <i class="bi bi-file-earmark-text me-2"></i>导出 CSV (.csv)
+                    </button>
+                </div>
+
+                <div id="export-status" class="mt-3 d-none"></div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="bi bi-lightbulb me-2"></i>使用说明
+            </div>
+            <div class="card-body">
+                <ul class="mb-0 small">
+                    <li class="mb-1">选择筛选条件后点击导出按钮</li>
+                    <li class="mb-1">导出文件包含：城市、时间、温度、湿度、气压、风速、风向、天气状况等完整字段</li>
+                    <li class="mb-1">Excel 格式使用 .xlsx，CSV 使用 UTF-8 编码 (带 BOM，Excel 可正确打开中文)</li>
+                    <li>不选择筛选条件将导出全部气象记录</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load cities for export dropdown
+apiGet('/api/cities').then(function(res) {
+    var select = $('#export-city');
+    res.cities.forEach(function(c) {
+        select.append('<option value="' + c.id + '">' + c.name + '</option>');
+    });
+});
+
+function doExport(format) {
+    var params = {};
+    var cityId = $('#export-city').val();
+    var source = $('#export-source').val();
+    var dateFrom = $('#export-date-from').val();
+    var dateTo = $('#export-date-to').val();
+
+    if (cityId) params.city_id = cityId;
+    if (source) params.source = source;
+    if (dateFrom) params.date_from = dateFrom;
+    if (dateTo) params.date_to = dateTo;
+
+    var url = '/api/export/' + format + '?' + $.param(params);
+
+    // Show status
+    $('#export-status').removeClass('d-none').html(
+        '<div class="alert alert-info"><span class="spinner-border spinner-border-sm me-2"></span>正在生成文件...</div>'
+    );
+
+    // Trigger download
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = '';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(function() {
+        $('#export-status').html('<div class="alert alert-success">文件下载已开始</div>');
+    }, 1000);
+}
+</script>
+{% endblock %}

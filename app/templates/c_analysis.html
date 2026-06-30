@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}C 语言气象分析 - 气象信息管理系统{% endblock %}
+{% block page_title %}🖥️ C 语言气象数据分析引擎{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex gap-2">
+    <select id="ca-city-select" class="form-select" style="width: 200px;">
+        <option value="">全部城市</option>
+    </select>
+    <button class="btn btn-primary" onclick="runCAnalysis()">
+        <i class="bi bi-cpu me-1"></i>运行 C 分析
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="alert alert-info small mb-3">
+    <i class="bi bi-info-circle me-1"></i>
+    本页面由 <strong>C 语言编译的程序</strong>（<code>analysis/weather_analysis</code>）执行分析，
+    Python 通过 <code>subprocess</code> 调用，通过标准输入输出 (stdin/stdout) 传递数据。
+</div>
+
+<div id="analysis-loading" class="text-center py-5 d-none">
+    <div class="spinner-border text-primary mb-3" role="status"></div>
+    <p class="text-muted">C 程序正在分析气象数据...</p>
+</div>
+
+<div id="analysis-error" class="d-none"></div>
+
+<!-- Summary -->
+<div id="analysis-summary" class="d-none">
+    <div class="row g-3 mb-4" id="summary-row"></div>
+</div>
+
+<!-- Per-city Cards -->
+<div id="analysis-cities" class="row g-3 d-none"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function runCAnalysis() {
+    var cityId = $('#ca-city-select').val();
+    var params = {};
+    if (cityId) params.city_id = cityId;
+
+    $('#analysis-loading').removeClass('d-none');
+    $('#analysis-error').addClass('d-none');
+    $('#analysis-summary').addClass('d-none');
+    $('#analysis-cities').addClass('d-none').empty();
+
+    apiGet('/api/analysis/c', params).then(function(res) {
+        $('#analysis-loading').addClass('d-none');
+
+        if (res.error) {
+            $('#analysis-error').removeClass('d-none').html(
+                '<div class="alert alert-danger">' + res.error + '</div>'
+            );
+            return;
+        }
+
+        // Summary bar
+        $('#analysis-summary').removeClass('d-none');
+        $('#summary-row').html(
+            '<div class="col-md-3"><div class="card stat-card bg-primary bg-opacity-10"><div class="card-body text-center">' +
+            '<div class="stat-value">' + res.record_count + '</div><div class="stat-label">分析记录数</div></div></div></div>' +
+            '<div class="col-md-3"><div class="card stat-card bg-success bg-opacity-10"><div class="card-body text-center">' +
+            '<div class="stat-value">' + res.city_count + '</div><div class="stat-label">城市数</div></div></div></div>' +
+            '<div class="col-md-3"><div class="card stat-card bg-info bg-opacity-10"><div class="card-body text-center">' +
+            '<div class="stat-value"><i class="bi bi-cpu"></i></div><div class="stat-label">C 语言分析引擎</div></div></div></div>' +
+            '<div class="col-md-3"><div class="card stat-card bg-warning bg-opacity-10"><div class="card-body text-center">' +
+            '<div class="stat-value">' + new Date().toLocaleTimeString('zh-CN') + '</div><div class="stat-label">分析时间</div></div></div></div>'
+        );
+
+        // City cards
+        var container = $('#analysis-cities');
+        container.removeClass('d-none');
+
+        res.cities.forEach(function(cs) {
+            var alerts = [];
+            if (cs.alerts.high_temperature) alerts.push('<span class="badge bg-danger me-1">🌡️ 高温</span>');
+            if (cs.alerts.strong_wind) alerts.push('<span class="badge bg-warning text-dark me-1">💨 强风</span>');
+            if (cs.alerts.storm_risk) alerts.push('<span class="badge bg-dark me-1">⛈️ 暴风雨风险</span>');
+            if (!alerts.length) alerts.push('<span class="badge bg-success">✅ 正常</span>');
+
+            container.append(
+                '<div class="col-lg-4 col-md-6">' +
+                '<div class="card h-100">' +
+                '<div class="card-header d-flex justify-content-between align-items-center">' +
+                '<strong>' + cs.name + '</strong>' +
+                '<small class="text-muted">' + cs.count + ' 条记录</small>' +
+                '</div>' +
+                '<div class="card-body">' +
+                '<div class="row g-2 small">' +
+                '<div class="col-6"><span class="text-muted">平均温度</span><br><strong>' + cs.temperature.avg + '°C</strong></div>' +
+                '<div class="col-6"><span class="text-muted">温度范围</span><br><strong>' + cs.temperature.min + ' ~ ' + cs.temperature.max + '°C</strong></div>' +
+                '<div class="col-6"><span class="text-muted">平均湿度</span><br><strong>' + cs.humidity.avg + '%</strong></div>' +
+                '<div class="col-6"><span class="text-muted">主要天气</span><br><strong>' + cs.dominant_weather + '</strong></div>' +
+                '<div class="col-6"><span class="text-muted">平均风速</span><br><strong>' + cs.wind.avg_speed + ' m/s</strong></div>' +
+                '<div class="col-6"><span class="text-muted">主导风向</span><br><strong>' + cs.wind.dominant_direction + '</strong></div>' +
+                '</div>' +
+                '<hr class="my-2">' +
+                '<div>' + alerts.join(' ') + '</div>' +
+                '</div></div></div>'
+            );
+        });
+    }).catch(function() {
+        $('#analysis-loading').addClass('d-none');
+        $('#analysis-error').removeClass('d-none').html(
+            '<div class="alert alert-danger">分析失败，请确保 C 程序已编译: <code>cd analysis && gcc -o weather_analysis weather_analysis.c -lm</code></div>'
+        );
+    });
+}
+
+// Load cities on init
+$(function() {
+    apiGet('/api/cities').then(function(res) {
+        res.cities.forEach(function(c) {
+            $('#ca-city-select').append('<option value="' + c.id + '">' + c.name + '</option>');
+        });
+    });
+    // Auto-run analysis
+    runCAnalysis();
+});
+</script>
+{% endblock %}

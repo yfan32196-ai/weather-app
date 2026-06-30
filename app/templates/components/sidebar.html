@@ -1,0 +1,58 @@
+{% if current_user.is_authenticated %}
+<nav class="sidebar bg-dark text-white" style="position: fixed; left: 0; top: 56px; bottom: 0; width: 250px; overflow-y: auto; z-index: 1000;">
+    <div class="p-3">
+        <ul class="nav flex-column">
+            <li class="nav-item mb-1">
+                <a class="nav-link text-white {{ 'active bg-primary' if request.endpoint == 'main.dashboard_page' }}"
+                   href="{{ url_for('main.dashboard_page') }}">
+                    <i class="bi bi-speedometer2 me-2"></i>仪表板
+                </a>
+            </li>
+            <li class="nav-item mb-1">
+                <a class="nav-link text-white {{ 'active bg-primary' if request.endpoint == 'main.records_page' }}"
+                   href="{{ url_for('main.records_page') }}">
+                    <i class="bi bi-database me-2"></i>气象记录
+                </a>
+            </li>
+            <li class="nav-item mb-1">
+                <a class="nav-link text-white {{ 'active bg-primary' if request.endpoint == 'main.cities_page' }}"
+                   href="{{ url_for('main.cities_page') }}">
+                    <i class="bi bi-geo-alt me-2"></i>城市管理
+                </a>
+            </li>
+
+            {% if current_user.is_admin() %}
+            <li class="nav-item mb-1">
+                <a class="nav-link text-white {{ 'active bg-primary' if request.endpoint == 'main.users_page' }}"
+                   href="{{ url_for('main.users_page') }}">
+                    <i class="bi bi-people me-2"></i>用户管理
+                </a>
+            </li>
+            {% endif %}
+
+            {% if current_user.is_editor() %}
+            <li class="nav-item mb-3">
+                <a class="nav-link text-white {{ 'active bg-primary' if request.endpoint == 'main.import_page' }}"
+                   href="{{ url_for('main.import_page') }}">
+                    <i class="bi bi-upload me-2"></i>数据导入
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="nav-item mb-1">
+                <a class="nav-link text-white {{ 'active bg-primary' if request.endpoint == 'main.export_page' }}"
+                   href="{{ url_for('main.export_page') }}">
+                    <i class="bi bi-download me-2"></i>数据导出
+                </a>
+            </li>
+
+            <li class="nav-item mb-1 mt-3 border-top pt-3">
+                <a class="nav-link text-white {{ 'active bg-primary' if request.endpoint == 'main.c_analysis_page' }}"
+                   href="{{ url_for('main.c_analysis_page') }}">
+                    <i class="bi bi-cpu me-2"></i>C 语言分析
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+{% endif %}

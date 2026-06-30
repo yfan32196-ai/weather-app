@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>气象信息管理系统 - 结构图</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    padding: 30px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 50px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-width: 1100px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 35px;
+    font-size: 24px;
+    letter-spacing: 2px;
+}
+
+.tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+/* rows */
+.row { display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.row + .row { margin-top: 0; }
+
+/* connector line */
+.connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.vline {
+    width: 2px;
+    height: 24px;
+    background: #c4c4c4;
+}
+.hline-group {
+    display: flex;
+    align-items: center;
+}
+.half-hline {
+    width: 40px;
+    height: 2px;
+    background: #c4c4c4;
+}
+.tline {
+    width: 2px;
+    height: 24px;
+    background: #c4c4c4;
+}
+
+/* boxes */
+.box {
+    padding: 10px 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.box:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+
+.box-start   { background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff; font-size: 16px; padding: 14px 36px; border-radius: 25px; }
+.box-login   { background: linear-gradient(135deg, #0f3460, #533483); color: #fff; font-size: 15px; padding: 12px 32px; border-radius: 25px; }
+.box-role    { background: #f0f0f0; color: #555; }
+
+.box-admin   { background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff; min-width: 80px; }
+.box-viewer  { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; min-width: 80px; }
+
+.box-module  { background: #f8f9fa; color: #495057; border: 1.5px solid #dee2e6; font-size: 12px; }
+
+.box-sub     { background: #fff; color: #6c757d; border: 1px solid #e9ecef; font-size: 11px; padding: 6px 14px; }
+
+.box-storage { background: linear-gradient(135deg, #e0eafc, #cfdef3); color: #3a7bd5; font-size: 13px; }
+
+.box-file    { background: #fff; color: #5a8dee; border: 1.5px solid #cfdef3; font-size: 12px; }
+
+/* split connector */
+.split {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+}
+.split-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* horizontal gap */
+.gap-20 { width: 20px; }
+.gap-40 { width: 40px; }
+</style>
+</head>
+<body>
+<div class="card">
+    <h1>气象信息管理系统 — 总体结构</h1>
+
+    <div class="tree">
+        <!-- 系统启动 -->
+        <div class="box box-start">系统启动</div>
+        <div class="connector"><div class="vline"></div></div>
+        <div class="box box-login">用户登录</div>
+        <div class="connector"><div class="vline"></div></div>
+        <div class="box box-role">角色判断</div>
+
+        <!-- 分叉 -->
+        <div class="split" style="margin-top: 0;">
+            <!-- 管理员侧 -->
+            <div class="split-col">
+                <div style="display:flex;align-items:flex-start;">
+                    <div class="connector" style="padding-top:0;">
+                        <div style="height:18px;border-left:2px solid #c4c4c4;"></div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;">
+                        <div class="box box-admin">管理员</div>
+                    </div>
+                </div>
+                <div class="connector"><div class="vline" style="height:14px;"></div></div>
+                <!-- 管理员模块 -->
+                <div class="row">
+                    <div class="box box-module">气象记录管理</div>
+                    <div class="box box-module">城市管理</div>
+                    <div class="box box-module">数据导入导出</div>
+                </div>
+                <div class="row" style="margin-top:6px;">
+                    <div class="box box-module">统计分析</div>
+                    <div class="box box-module">极端天气预警</div>
+                    <div class="box box-module">用户管理</div>
+                </div>
+                <div class="connector"><div class="vline" style="height:14px;"></div></div>
+                <!-- 文件模块 -->
+                <div class="box box-storage">文件读写模块</div>
+                <div class="connector"><div class="vline" style="height:10px;"></div></div>
+                <div class="row">
+                    <div class="box box-file">cities.dat</div>
+                    <div class="box box-file">records.dat</div>
+                    <div class="box box-file">users.dat</div>
+                </div>
+            </div>
+
+            <div class="gap-40"></div>
+
+            <!-- 观察者侧 -->
+            <div class="split-col">
+                <div style="display:flex;align-items:flex-start;">
+                    <div class="connector" style="padding-top:0;">
+                        <div style="height:18px;border-left:2px solid #c4c4c4;"></div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;">
+                        <div class="box box-viewer">观察者</div>
+                    </div>
+                </div>
+                <div class="connector"><div class="vline" style="height:14px;"></div></div>
+                <div class="row">
+                    <div class="box box-sub">查看记录</div>
+                    <div class="box box-sub">查看统计</div>
+                    <div class="box box-sub">查看预警</div>
+                    <div class="box box-sub">导出数据</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

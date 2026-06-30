@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}城市管理 - 气象信息管理系统{% endblock %}
+{% block page_title %}城市管理{% endblock %}
+
+{% block page_actions %}
+{% if current_user.is_editor() %}
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#cityModal" onclick="clearCityForm()">
+    <i class="bi bi-plus-lg me-1"></i>添加城市
+</button>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>城市名称</th>
+                        <th>国家</th>
+                        <th>省/州</th>
+                        <th>纬度</th>
+                        <th>经度</th>
+                        <th>OWM城市ID</th>
+                        <th>记录数</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="cities-tbody">
+                    <tr><td colspan="8" class="text-center py-4 text-muted">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- City Form Modal -->
+<div class="modal fade" id="cityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cityModalTitle">添加城市</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="city-id">
+                <div class="mb-3">
+                    <label class="form-label">城市名称 *</label>
+                    <input type="text" id="city-name" class="form-control" placeholder="如 北京">
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">国家</label>
+                        <input type="text" id="city-country" class="form-control" placeholder="中国">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">省/州</label>
+                        <input type="text" id="city-state" class="form-control" placeholder="如 北京">
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label">纬度 *</label>
+                        <input type="number" step="0.0001" id="city-lat" class="form-control" placeholder="39.9042">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">经度 *</label>
+                        <input type="number" step="0.0001" id="city-lon" class="form-control" placeholder="116.4074">
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label">OWM 城市 ID</label>
+                        <input type="number" id="city-owm" class="form-control" placeholder="可选">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">备注</label>
+                        <input type="text" id="city-notes" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveCity()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteCityModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除该城市吗？该城市下所有气象记录也会被删除，此操作不可撤销。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-city-delete">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/cities.js') }}"></script>
+{% endblock %}

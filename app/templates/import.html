@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}数据导入 - 气象信息管理系统{% endblock %}
+{% block page_title %}数据导入{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Upload Section -->
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-upload me-2"></i>上传文件
+            </div>
+            <div class="card-body">
+                <div class="upload-area mb-3" id="upload-area">
+                    <i class="bi bi-file-earmark-spreadsheet" style="font-size: 3rem; color: #6c757d;"></i>
+                    <p class="mt-3 mb-1">点击选择文件或拖拽到此处</p>
+                    <small class="text-muted">支持 .xlsx / .xls / .csv 格式</small>
+                    <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none;">
+                </div>
+                <div id="upload-file-name" class="mb-2 text-muted small d-none"></div>
+                <div class="progress mb-3 d-none" id="upload-progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%">处理中...</div>
+                </div>
+                <div id="upload-result" class="d-none"></div>
+                <button class="btn btn-primary w-100" id="btn-upload" disabled>
+                    <i class="bi bi-cloud-upload me-1"></i>开始导入
+                </button>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>导入模板说明
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">文件必须包含以下列（列名可中英文）：</p>
+                <table class="table table-sm small">
+                    <thead><tr><th>列名</th><th>必需</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>city_name / 城市</td><td>是</td><td>城市名称</td></tr>
+                        <tr><td>record_time / 记录时间</td><td>是</td><td>YYYY-MM-DD HH:MM:SS</td></tr>
+                        <tr><td>temperature / 温度</td><td>否</td><td>摄氏度</td></tr>
+                        <tr><td>humidity / 湿度</td><td>否</td><td>0-100%</td></tr>
+                        <tr><td>pressure / 气压</td><td>否</td><td>hPa</td></tr>
+                        <tr><td>wind_speed / 风速</td><td>否</td><td>m/s</td></tr>
+                        <tr><td>weather_desc / 天气描述</td><td>否</td><td>如 "晴转多云"</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import History -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2"></i>导入历史</span>
+                <button class="btn btn-sm btn-outline-secondary" onclick="loadImportLogs()">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>文件名</th>
+                                <th>导入人</th>
+                                <th>成功/跳过</th>
+                                <th>状态</th>
+                                <th>时间</th>
+                                <th>详情</th>
+                            </tr>
+                        </thead>
+                        <tbody id="import-logs-tbody">
+                            <tr><td colspan="6" class="text-center py-3 text-muted">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Upload area click
+$('#upload-area').on('click', function() { $('#import-file').click(); });
+$('#upload-area').on('dragover', function(e) { e.preventDefault(); $(this).addClass('dragover'); });
+$('#upload-area').on('dragleave', function() { $(this).removeClass('dragover'); });
+$('#upload-area').on('drop', function(e) {
+    e.preventDefault();
+    $(this).removeClass('dragover');
+    var files = e.originalEvent.dataTransfer.files;
+    if (files.length) handleFileSelect(files[0]);
+});
+
+$('#import-file').on('change', function() {
+    if (this.files.length) handleFileSelect(this.files[0]);
+});
+
+function handleFileSelect(file) {
+    $('#upload-file-name').text('已选择: ' + file.name).removeClass('d-none');
+    $('#btn-upload').prop('disabled', false);
+}
+
+$('#btn-upload').on('click', function() {
+    var file = $('#import-file')[0].files[0];
+    if (!file) return;
+
+    var formData = new FormData();
+    formData.append('file', file);
+
+    var btn = $(this);
+    btn.prop('disabled', true);
+    $('#upload-progress').removeClass('d-none');
+    $('#upload-result').addClass('d-none');
+
+    $.ajax({
+        url: '/api/import/upload',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            $('#upload-progress').addClass('d-none');
+            var cls = 'alert-success';
+            $('#upload-result').removeClass('d-none').html(
+                '<div class="alert ' + cls + '">' + res.message +
+                '<br><small>成功: ' + res.import_log.record_count +
+                ' | 跳过: ' + res.import_log.skipped_count + '</small></div>'
+            );
+            loadImportLogs();
+        },
+        error: function(xhr) {
+            $('#upload-progress').addClass('d-none');
+            var msg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '导入失败';
+            $('#upload-result').removeClass('d-none').html('<div class="alert alert-danger">' + msg + '</div>');
+            btn.prop('disabled', false);
+        }
+    });
+});
+
+function loadImportLogs() {
+    apiGet('/api/import/logs').then(function(res) {
+        var tbody = $('#import-logs-tbody');
+        tbody.empty();
+        if (!res.logs.length) {
+            tbody.html('<tr><td colspan="6" class="text-center py-3 text-muted">暂无导入记录</td></tr>');
+            return;
+        }
+        res.logs.forEach(function(log) {
+            var statusClass = log.status === 'success' ? 'text-success' :
+                             log.status === 'partial' ? 'text-warning' :
+                             log.status === 'failed' ? 'text-danger' : 'text-muted';
+            var errorTitle = log.error_detail ? ' title="' + $('<div>').text(log.error_detail).html() + '"' : '';
+            tbody.append(
+                '<tr>' +
+                '<td class="small">' + $('<div>').text(log.filename).html() + '</td>' +
+                '<td>' + $('<div>').text(log.username).html() + '</td>' +
+                '<td>' + log.record_count + ' / ' + log.skipped_count + '</td>' +
+                '<td><span class="' + statusClass + '">' + log.status + '</span></td>' +
+                '<td class="small">' + formatDateTime(log.created_at) + '</td>' +
+                '<td>' + (log.error_detail ? '<i class="bi bi-exclamation-triangle text-warning"' + errorTitle + '></i>' : '-') + '</td>' +
+                '</tr>'
+            );
+        });
+    });
+}
+
+// Load on page init
+loadImportLogs();
+</script>
+{% endblock %}

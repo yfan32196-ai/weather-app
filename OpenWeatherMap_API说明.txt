@@ -1,0 +1,108 @@
+OpenWeatherMap API 调用说明
+
+
+一、注册获取 API Key
+
+1. 打开 https://openweathermap.org 注册账号
+2. 登录后进入 https://home.openweathermap.org/api_keys
+3. 复制默认生成的 API Key（免费版每分钟可调用60次）
+
+
+二、API 接口说明
+
+接口地址：
+https://api.openweathermap.org/data/2.5/weather
+
+请求方式：GET
+
+请求参数：
+id      —— 城市ID（OpenWeatherMap内置城市编号）
+lat     —— 纬度（没有城市ID时使用）
+lon     —— 经度（没有城市ID时使用）
+appid   —— API Key（你的密钥）
+units   —— metric（表示摄氏度）
+lang    —— zh_cn（返回中文描述）
+
+请求示例（获取北京实时天气）：
+https://api.openweathermap.org/data/2.5/weather?id=1816670&appid=你的密钥&units=metric&lang=zh_cn
+
+
+三、服务器返回 JSON 数据解析
+
+API 返回的是 JSON 格式，我们解析以下关键字段：
+
+dt          —— 观测时间（Unix时间戳）
+main.temp   —— 温度，单位摄氏度
+main.feels_like —— 体感温度
+main.humidity —— 湿度，单位百分比
+main.pressure —— 气压，单位百帕
+wind.speed  —— 风速，单位米/秒
+wind.deg    —— 风向角度（0-360度，需转换为N/NE/E等文字）
+wind.gust   —— 阵风
+weather[0].main —— 天气状况英文（Clouds/Rain/Snow等）
+weather[0].description —— 天气中文描述（如"阴，多云"）
+visibility  —— 能见度，单位米
+clouds.all  —— 云量百分比
+
+
+四、Python 调用代码（核心部分）
+
+我们使用 Python 的 requests 库发送 GET 请求：
+
+import requests
+
+API_KEY = "你的密钥"
+BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
+
+city_id = 1816670  # 北京的城市ID
+
+params = {
+    "id": city_id,
+    "appid": API_KEY,
+    "units": "metric",
+    "lang": "zh_cn"
+}
+
+response = requests.get(BASE_URL, params=params, timeout=10)
+data = response.json()
+
+# 读取温度
+temp = data["main"]["temp"]
+
+# 读取湿度
+humidity = data["main"]["humidity"]
+
+# 读取天气描述
+weather_desc = data["weather"][0]["description"]
+
+# 风向角度转方向文字
+wind_deg = data["wind"].get("deg", 0)
+directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+wind_direction = directions[round(wind_deg / 45) % 8]
+
+print(f"温度：{temp}°C，湿度：{humidity}%，天气：{weather_desc}，风向：{wind_direction}")
+
+
+五、系统中完整调用流程
+
+第1步：用户在网页点击"获取实时天气"按钮
+第2步：浏览器发送 POST 请求到 /api/weather/fetch，参数为 {city_id: 1}
+第3步：Flask 后端收到请求后，调用 WeatherAPIService.get_current_weather(city)
+第4步：在函数内部用 requests 库向 OpenWeatherMap 发送 GET 请求
+第5步：解析返回的 JSON 数据，按要求提取温度湿度风速风向等字段
+第6步：将数据存入数据库的 WeatherRecord 表中
+第7步：返回成功消息给前端，前端刷新数据列表
+
+
+六、两个细节处理
+
+1. 频率限制：免费版每分钟最多60次请求，我们在代码中加了缓存（同一城市10分钟内不重复请求）和调用间隔控制（两次请求至少间隔1.2秒）
+
+2. API Key 配置：密钥通过环境变量 OWM_API_KEY 传入，不直接写在代码里，修改密钥时只需改环境变量即可，不用改代码
+
+
+七、系统中对应文件
+
+app/services/weather_api.py   —— API 调用核心代码
+app/routes/api_fetch.py       —— 接收前端请求，调用API并存入数据库
+app/config.py                 —— 从环境变量读取 API Key

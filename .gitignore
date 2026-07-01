@@ -4,3 +4,11 @@ __pycache__/
 *.pyc
 .env
 venv/
+c_weather_system/data/
+c_weather_system/*.o
+c_weather_system/weather_system
+c_weather_system/*.png
+c_weather_system/*.html
+*.o
+*.png
+.DS_Store
